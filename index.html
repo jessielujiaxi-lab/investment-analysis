@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>机构级投资分析平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.35.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f12;
+    --surface: #13161b;
+    --surface2: #1a1e25;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text-primary: #e8eaf0;
+    --text-secondary: #8a8f9e;
+    --text-muted: #4a4f60;
+    --accent: #3b82f6;
+    --accent-dim: rgba(59,130,246,0.12);
+    --accent-border: rgba(59,130,246,0.35);
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --radius: 8px;
+    --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  button, input { font: inherit; }
+  .app-shell {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-rows: 56px minmax(0, 1fr);
+    height: 100vh;
+    overflow: hidden;
+  }
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .topbar-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .topbar-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .status-label { font-size: 11px; color: var(--text-secondary); }
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px;
+    gap: 20px;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-help { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .input-field {
+    width: 100%;
+    min-height: 36px;
+    padding: 0 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-field:focus { border-color: var(--accent-border); }
+  .input-field::placeholder { color: var(--text-muted); }
+  .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .market-btn, .mod-toggle, .action-btn, .run-btn, .cancel-btn {
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .market-btn {
+    padding: 6px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    border-color: var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+  .market-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+  .market-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent-border);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .modules-list { display: flex; flex-direction: column; gap: 3px; }
+  .mod-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-align: left;
+    width: 100%;
+  }
+  .mod-toggle:hover { background: var(--surface2); color: var(--text-primary); }
+  .mod-toggle.on { background: var(--surface2); border-color: var(--border); color: var(--text-primary); }
+  .mod-toggle .check {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mod-toggle.on .check { background: var(--accent); border-color: var(--accent); }
+  .mod-toggle.on .check::after { content: '✓'; font-size: 9px; color: white; font-weight: 700; }
+  .mod-toggle i { font-size: 14px; flex-shrink: 0; }
+  .run-stack { display: grid; gap: 8px; }
+  .run-btn, .cancel-btn {
+    width: 100%;
+    min-height: 40px;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .run-btn { background: var(--accent); }
+  .run-btn:hover { background: #2563eb; }
+  .run-btn:disabled, .cancel-btn:disabled {
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+  .cancel-btn { display: none; background: var(--red); }
+  .cancel-btn.show { display: flex; }
+  .main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .progress-bar-wrap { height: 2px; background: var(--surface2); flex-shrink: 0; }
+  .progress-bar-fill { height: 2px; background: var(--accent); transition: width 0.4s ease; }
+  .ticker-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 0;
+  }
+  .ticker-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+  .ticker-sep { color: var(--text-muted); }
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+  .tab-bar::-webkit-scrollbar { height: 0; }
+  .tab-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    height: 44px;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    background: none;
+  }
+  .tab-item:hover { color: var(--text-primary); }
+  .tab-item.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+  .tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .tab-item.done .tab-dot { background: var(--green); }
+  .tab-item.loading .tab-dot { background: var(--amber); animation: pulse 1s infinite; }
+  .tab-item.error .tab-dot { background: var(--red); }
+  .tab-item.active .tab-dot { background: var(--accent); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .content-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .empty-state, .loading-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-muted);
+    padding: 24px;
+    text-align: center;
+  }
+  .empty-icon { font-size: 48px; opacity: 0.3; }
+  .empty-title { font-size: 16px; font-weight: 500; color: var(--text-secondary); }
+  .empty-sub { font-size: 13px; color: var(--text-muted); max-width: 420px; line-height: 1.6; }
+  .panel-wrap { flex: 1; overflow-y: auto; padding: 24px; }
+  .panel-wrap::-webkit-scrollbar { width: 4px; }
+  .panel-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .panel-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .panel-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--surface2);
+    border-color: var(--border);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+  .analysis-body {
+    font-size: 14px;
+    line-height: 1.85;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .analysis-body .sec-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 20px 0 6px;
+    display: block;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .analysis-body .sec-head:first-child { margin-top: 0; }
+  .error-box {
+    border: 1px solid rgba(239,68,68,0.35);
+    background: var(--red-dim);
+    color: #fecaca;
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .loader-ring {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 13px; color: var(--text-secondary); }
+  @media (max-width: 720px) {
+    .app-shell { grid-template-columns: 1fr; grid-template-rows: 56px auto minmax(0, 1fr); }
+    .sidebar {
+      grid-row: 2;
+      grid-column: 1;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      max-height: 320px;
+    }
+    .main { grid-row: 3; min-height: 0; }
+    .topbar { padding: 0 14px; }
+    .topbar-badge { display: none; }
+    .ticker-display { flex-wrap: wrap; }
+    .panel-wrap { padding: 18px; }
+    .panel-header { align-items: flex-start; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="topbar-logo"><span class="dot"></span>投研终端</div>
+    <span class="topbar-badge">GitHub Pages</span>
+    <div class="topbar-right">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="status-label" id="mode-label">演示模式</span>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-section-label">标的</div>
+      <div class="input-group">
+        <input class="input-field" id="ticker-input" type="text" autocomplete="off" placeholder="如：茅台 / AAPL / 600519" />
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-label">后端接口</div>
+      <div class="input-group">
+        <input class="input-field" id="api-url-input" type="url" placeholder="https://your-api.example.com/analyze" />
+        <div class="input-help">留空会使用演示内容。不要在静态网页里填写或保存模型 API Key。</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-label">市场</div>
+      <div class="market-grid" id="market-grid" role="group" aria-label="选择市场">
+        <button class="market-btn active" type="button" data-m="A股" aria-pressed="true">A股</button>
+        <button class="market-btn" type="button" data-m="港股" aria-pressed="false">港股</button>
+        <button class="market-btn" type="button" data-m="美股" aria-pressed="false">美股</button>
+        <button class="market-btn" type="button" data-m="中概股" aria-pressed="false">中概股</button>
+      </div>
+    </div>
+
+    <div style="flex:1">
+      <div class="sidebar-section-label">分析模块</div>
+      <div class="modules-list" id="modules-list"></div>
+    </div>
+
+    <div class="run-stack">
+      <button class="run-btn" id="run-btn" type="button">
+        <i class="ti ti-sparkles" aria-hidden="true"></i> 生成分析报告
+      </button>
+      <button class="cancel-btn" id="cancel-btn" type="button">
+        <i class="ti ti-circle-x" aria-hidden="true"></i> 取消分析
+      </button>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="progress-bar-wrap" aria-hidden="true"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+    <div id="ticker-bar" style="display:none" class="ticker-display">
+      <span class="ticker-name" id="ticker-bar-name"></span>
+      <span class="ticker-sep">·</span>
+      <span id="ticker-bar-market"></span>
+      <span class="ticker-sep">·</span>
+      <span id="ticker-bar-mods"></span>
+    </div>
+    <div class="tab-bar" id="tab-bar" role="tablist" aria-label="分析模块"></div>
+    <div class="content-area" id="content-area">
+      <div class="empty-state" id="empty-state">
+        <i class="ti ti-chart-candlestick empty-icon" aria-hidden="true"></i>
+        <div class="empty-title">机构级投资研究平台</div>
+        <div class="empty-sub">输入公司名称或股票代码，选择所需分析模块。配置后端接口后可生成真实报告；未配置时会展示演示报告。</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const MODULES = [
+  { key:'business', label:'商业模式', icon:'ti-building-store', color:'#3b82f6' },
+  { key:'industry', label:'行业竞争', icon:'ti-tournament', color:'#8b5cf6' },
+  { key:'mgmt', label:'企业文化与管理层', icon:'ti-users', color:'#06b6d4' },
+  { key:'financial', label:'财务分析', icon:'ti-report-money', color:'#22c55e' },
+  { key:'growth', label:'成长性', icon:'ti-trending-up', color:'#10b981' },
+  { key:'dcf', label:'DCF估值', icon:'ti-calculator', color:'#f59e0b' },
+  { key:'risk', label:'风险分析', icon:'ti-alert-triangle', color:'#ef4444' },
+  { key:'conclusion', label:'投资结论', icon:'ti-gavel', color:'#a78bfa' },
+  { key:'bear', label:'空头逻辑', icon:'ti-mood-angry', color:'#f97316' },
+  { key:'holes', label:'逻辑漏洞', icon:'ti-bug', color:'#ec4899' },
+];
+
+const PROMPTS = {
+  business: '商业模式、收入结构、护城河、规模效应，必须区分事实数据与推断。',
+  industry: '行业规模、竞争格局、主要竞争对手、市占率、Porter 五力。',
+  mgmt: '管理层背景、资本配置、股权结构、治理风险、文化特征。',
+  financial: '营收利润、ROE 杜邦、自由现金流、资产负债表、异常财务信号。',
+  growth: '未来增长驱动、领先指标、渗透率、复利特征、增长率区间。',
+  dcf: '三情景 DCF，列出增长、利润率、资本开支、WACC、终值增长率假设。',
+  risk: '最大三个风险，触发条件、量化影响、概率、是否已被定价。',
+  conclusion: '明确评级、适配投资类型、核心逻辑、跟踪指标、买入条件。',
+  bear: '最强空头论点，给出多空分歧和可证伪指标。',
+  holes: '多头逻辑漏洞、认知偏误、重仓前提假设清单。',
+};
+
+let selectedMarket = 'A股';
+let selectedMods = new Set(MODULES.map(m => m.key));
+let results = {};
+let resultStates = {};
+let tabs = {};
+let activeKey = null;
+let isRunning = false;
+let activeController = null;
+
+const modList = document.getElementById('modules-list');
+const apiUrlInput = document.getElementById('api-url-input');
+const savedApiUrl = localStorage.getItem('analysisApiUrl') || '';
+apiUrlInput.value = savedApiUrl;
+updateModeLabel();
+
+MODULES.forEach(mod => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'mod-toggle on';
+  btn.dataset.key = mod.key;
+  btn.setAttribute('aria-pressed', 'true');
+  btn.innerHTML = `<span class="check" aria-hidden="true"></span><i class="ti ${mod.icon}" style="color:${mod.color}" aria-hidden="true"></i>${escapeHTML(mod.label)}`;
+  btn.addEventListener('click', () => {
+    const nextOn = !selectedMods.has(mod.key);
+    if (nextOn) selectedMods.add(mod.key);
+    else selectedMods.delete(mod.key);
+    btn.classList.toggle('on', nextOn);
+    btn.setAttribute('aria-pressed', String(nextOn));
+  });
+  modList.appendChild(btn);
+});
+
+document.querySelectorAll('.market-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.market-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+    selectedMarket = btn.dataset.m;
+  });
+});
+
+apiUrlInput.addEventListener('change', () => {
+  localStorage.setItem('analysisApiUrl', apiUrlInput.value.trim());
+  updateModeLabel();
+});
+
+document.getElementById('ticker-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+document.getElementById('run-btn').addEventListener('click', runAnalysis);
+document.getElementById('cancel-btn').addEventListener('click', cancelAnalysis);
+
+function updateModeLabel() {
+  document.getElementById('mode-label').textContent = apiUrlInput.value.trim() ? '后端接口模式' : '演示模式';
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function renderMarkdownLite(text) {
+  return escapeHTML(text)
+    .replace(/^###\s+(.+)$/gm, '<span class="sec-head">$1</span>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderContent(key) {
+  activeKey = key;
+  document.querySelectorAll('.tab-item').forEach(t => {
+    const active = t.dataset.key === key;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', String(active));
+  });
+
+  const area = document.getElementById('content-area');
+  const mod = MODULES.find(m => m.key === key);
+  const text = results[key];
+
+  if (!text) {
+    area.innerHTML = `<div class="loading-panel"><div class="loader-ring"></div><div class="loader-text">正在分析 ${escapeHTML(mod.label)}...</div></div>`;
+    return;
+  }
+
+  const error = resultStates[key] === 'error'
+    ? `<div class="error-box">该模块未成功生成。请检查后端接口、网络状态或稍后重试。</div>`
+    : '';
+
+  area.innerHTML = `
+    <div class="panel-wrap">
+      <div class="panel-header">
+        <div class="panel-title"><i class="ti ${mod.icon}" style="color:${mod.color}; font-size:16px; margin-right:6px; vertical-align:-2px;" aria-hidden="true"></i>${escapeHTML(mod.label)}</div>
+        <div class="panel-actions">
+          <button class="action-btn" type="button" onclick="copyResult('${key}', this)"><i class="ti ti-copy" aria-hidden="true"></i> 复制</button>
+          <button class="action-btn" type="button" onclick="exportAll()"><i class="ti ti-download" aria-hidden="true"></i> 导出全部</button>
+        </div>
+      </div>
+      ${error}
+      <div class="analysis-body" id="body-${key}">${renderMarkdownLite(text)}</div>
+    </div>`;
+}
+
+function addTab(key, state) {
+  const mod = MODULES.find(m => m.key === key);
+  const tabBar = document.getElementById('tab-bar');
+  const tab = document.createElement('button');
+  tab.type = 'button';
+  tab.className = `tab-item ${state}`;
+  tab.dataset.key = key;
+  tab.setAttribute('role', 'tab');
+  tab.setAttribute('aria-selected', 'false');
+  tab.innerHTML = `<span class="tab-dot" aria-hidden="true"></span>${escapeHTML(mod.label)}`;
+  tab.addEventListener('click', () => { if (results[key]) renderContent(key); });
+  tabBar.appendChild(tab);
+  tabs[key] = tab;
+}
+
+function setTabState(key, state) {
+  if (!tabs[key]) return;
+  tabs[key].classList.remove('done','loading','active','error');
+  if (state) tabs[key].classList.add(state);
+}
+
+async function runAnalysis() {
+  if (isRunning) return;
+  const ticker = document.getElementById('ticker-input').value.trim();
+  if (!ticker) {
+    document.getElementById('ticker-input').focus();
+    return;
+  }
+  if (selectedMods.size === 0) return;
+
+  apiUrlInput.dispatchEvent(new Event('change'));
+  isRunning = true;
+  results = {};
+  resultStates = {};
+  tabs = {};
+  activeKey = null;
+  activeController = new AbortController();
+
+  const runBtn = document.getElementById('run-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 0.8s linear infinite" aria-hidden="true"></i> 分析中...';
+  cancelBtn.classList.add('show');
+
+  document.getElementById('ticker-bar').style.display = 'flex';
+  document.getElementById('ticker-bar-name').textContent = ticker;
+  document.getElementById('ticker-bar-market').textContent = selectedMarket;
+  document.getElementById('ticker-bar-mods').textContent = `${selectedMods.size} 个模块`;
+  document.getElementById('content-area').innerHTML = '';
+  document.getElementById('tab-bar').innerHTML = '';
+  setProgress(0);
+
+  const modsToRun = MODULES.filter(m => selectedMods.has(m.key));
+  modsToRun.forEach(m => addTab(m.key, ''));
+
+  for (let i = 0; i < modsToRun.length; i++) {
+    const mod = modsToRun[i];
+    setTabState(mod.key, 'loading');
+    if (!activeKey) renderContent(mod.key);
+
+    try {
+      results[mod.key] = await analyzeModule({ ticker, market: selectedMarket, mod, signal: activeController.signal });
+      resultStates[mod.key] = 'done';
+      setTabState(mod.key, 'done');
+    } catch (error) {
+      resultStates[mod.key] = 'error';
+      results[mod.key] = error.name === 'AbortError'
+        ? '分析已取消。'
+        : `分析失败：${error.message}`;
+      setTabState(mod.key, 'error');
+      if (error.name === 'AbortError') break;
+    }
+
+    setProgress(Math.round((i + 1) / modsToRun.length * 100));
+    if (activeKey === mod.key || !results[activeKey]) renderContent(mod.key);
+  }
+
+  finishRun();
+}
+
+async function analyzeModule({ ticker, market, mod, signal }) {
+  const apiUrl = apiUrlInput.value.trim();
+  if (!apiUrl) return demoResult(ticker, market, mod);
+
+  const timeoutId = setTimeout(() => activeController.abort(), 45000);
+  try {
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        ticker,
+        market,
+        module: mod.key,
+        moduleLabel: mod.label,
+        prompt: PROMPTS[mod.key],
+      })
+    });
+
+    let data = null;
+    try { data = await resp.json(); } catch (_) {}
+    if (!resp.ok) {
+      const message = data?.error?.message || data?.message || `${resp.status} ${resp.statusText}`;
+      throw new Error(message);
+    }
+
+    if (typeof data?.text === 'string') return data.text;
+    if (Array.isArray(data?.content)) return data.content.map(c => c.text || '').join('');
+    throw new Error('后端响应缺少 text 字段。');
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function demoResult(ticker, market, mod) {
+  return `### ${mod.label}
+当前为 GitHub Pages 静态演示模式，未调用任何模型接口，也不会生成真实投资建议。
+
+**标的**：${ticker}
+**市场**：${market}
+**模块要求**：${PROMPTS[mod.key]}
+
+要生成真实报告，请部署一个后端接口并在左侧填写 URL。后端应接收 ticker、market、module、prompt，并返回：
+{"text":"### 小标题\\n报告正文"}
+
+为了避免误导，本页面不会在缺少可信数据源时声称已经完成实时分析。`;
+}
+
+function cancelAnalysis() {
+  if (activeController) activeController.abort();
+}
+
+function finishRun() {
+  setTabState(activeKey, resultStates[activeKey] === 'error' ? 'error' : 'active');
+  isRunning = false;
+  activeController = null;
+  const runBtn = document.getElementById('run-btn');
+  runBtn.disabled = false;
+  runBtn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> 重新分析';
+  document.getElementById('cancel-btn').classList.remove('show');
+}
+
+function copyResult(key, btn) {
+  navigator.clipboard.writeText(results[key] || '').then(() => {
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 已复制';
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" aria-hidden="true"></i> 复制'; }, 1500);
+  }).catch(() => {
+    btn.textContent = '复制失败';
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" aria-hidden="true"></i> 复制'; }, 1500);
+  });
+}
+
+function exportAll() {
+  const ticker = document.getElementById('ticker-input').value.trim() || '未命名';
+  let out = `# ${ticker} 投资研究报告\n生成时间：${new Date().toLocaleString('zh-CN')}\n\n`;
+  MODULES.filter(m => results[m.key]).forEach(m => {
+    out += `\n${'='.repeat(50)}\n## ${m.label}\n${'='.repeat(50)}\n\n${results[m.key]}\n`;
+  });
+  const blob = new Blob([out], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${ticker}_投研报告_${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+</script>
+</body>
+</html>
